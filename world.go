@@ -65,6 +65,7 @@ type World interface {
 
 	NewEntity() Entity
 	RemEntity(e Entity)
+	HasEntity(e Entity) bool
 
 	Assign(entity Entity, components ...ID)
 	Remove(entity Entity, components ...ID)
@@ -183,11 +184,28 @@ func (w *world) RemEntity(entity Entity) {
 		w.remEntitiesQueue = append(w.remEntitiesQueue, entity)
 		w.eventsQueue = append(w.eventsQueue, EntityMaskPair{entity, w.entities[entity]})
 		w.eventsQueueAdding = append(w.eventsQueueAdding, false)
-		w.entities[entity] = Mask(0);
+		w.entities[entity] = Mask(0)
 	} else {
 		w.remComponentsFromEntities(entity)
 		w.recycleEntitiesAndUpdateFilters(entity)
 	}
+}
+
+func (w *world) HasEntity(entity Entity) bool {
+	if entity < 1 {
+		LogMessage("[World.HasEntity] invalid entity id %d\n", entity)
+		return false
+	}
+	if int(entity) >= len(w.entities) {
+		return false
+	}
+	if w.entities[entity] == Mask(0) && entitySliceContains(w.recycleIDs, entity) {
+		return false
+	}
+	if w.lock > 0 && entitySliceContains(w.remEntitiesQueue, entity) {
+		return false
+	}
+	return true
 }
 
 func (w *world) Assign(entity Entity, ids ...ID) {

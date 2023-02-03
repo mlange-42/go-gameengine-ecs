@@ -151,6 +151,42 @@ func TestWorldEntityID(t *testing.T) {
 	}
 }
 
+func TestWorldHasEntity(t *testing.T) {
+	config := []ComponentConfig{
+		{Transform2DComponentID, 0, Transform2D{}},
+	}
+	world := NewWorld(config...)
+
+	entity1 := world.NewEntity()
+	entity2 := world.NewEntity()
+
+	if !world.HasEntity(entity1) {
+		t.Errorf("expected entity 1 to exist")
+	}
+	if !world.HasEntity(entity2) {
+		t.Errorf("expected entity 1 to exist")
+	}
+	if world.HasEntity(3) {
+		t.Errorf("expected entity 3 not to exist")
+	}
+
+	world.RemEntity(entity1)
+	if world.HasEntity(entity1) {
+		t.Errorf("expected entity 1 not to exist")
+	}
+
+	world.Lock()
+	world.RemEntity(entity2)
+	if world.HasEntity(entity2) {
+		t.Errorf("expected entity 2 not to exist")
+	}
+	world.Unlock()
+
+	if world.HasEntity(entity2) {
+		t.Errorf("expected entity 2 not to exist")
+	}
+}
+
 func TestWorldDebug(t *testing.T) {
 	config := []ComponentConfig{
 		{Transform2DComponentID, 0, Transform2D{}},
